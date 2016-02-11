@@ -1,0 +1,46 @@
+#!/bin/sh
+
+usage="Uso:        $0 [-s] directory <nome do metodo>   "
+
+if [ $# -lt 2 ] ; then
+    echo $usage
+    exit 1
+fi
+
+strict=0
+if [ $1 = '-s' ] ; then
+    strict=1
+    echo "strict=true"
+	shift
+fi
+
+if [ -d $1 ] ; then
+    FIND_CMD="find $1"
+else 
+    echo "Diretorio nao existe"
+    exit 1    
+fi
+
+method_name=$2
+if [ $strict = 1 ] ; then
+    method_name=''
+fi
+
+$FIND_CMD -name \*.jar | while read jar_file ; 
+do
+    unzip -l $jar_file | grep class$ | awk '{print $4}' | sed 's/.class//g' | while read clazz;
+	do
+		found_method=`$JAVA_HOME/bin/javap -classpath $jar_file $clazz | grep '^ '|grep $method_name`
+#        echo "$found_method"
+		num_methods=`echo $found_method | wc -c`
+		if [ $num_methods -gt 1 ] ; then 
+			echo ""
+			echo "Arquivo:"
+			echo "    $jar_file"
+			echo "  Classe:   "$clazz
+			echo  -n "    Metodo:  "
+#			echo $found_method | awk '{i=NF ; print $i}'
+			echo $found_method | grep --color $method_name
+		fi
+	done
+done

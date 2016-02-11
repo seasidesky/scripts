@@ -1,0 +1,22 @@
+#!/bin/sh
+
+IFACE=$1
+
+LAST_IFACE=`ifconfig|grep $IFACE|awk '{print $1}' | sed 's/:$//g'|tail -1`
+#echo "LAST_IFACE = $LAST_IFACE"
+HAS_ALIAS=`ifconfig|grep $IFACE|awk '{print $1}' | sed 's/:$//g'| tail -1 | grep ':'`
+#echo "HAS_ALIAS = $HAS_ALIAS"
+if [ "$HAS_ALIAS"  ] ; then
+#    echo  "alias => $HAS_ALIAS"
+    NUM=`echo $LAST_IFACE| sed -e 's/.*://g' `
+#    echo "NUM = $NUM"
+    NUM=`echo $NUM+1|bc`
+#    echo "next NUM = $NUM"
+else
+#    echo  "iface => $LAST_IFACE"
+    NUM=0
+fi
+
+sudo ifconfig  "$1":"$NUM" 10.10.10.1$NUM  netmask 255.255.255.0  up
+
+ifconfig
